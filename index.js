@@ -40,6 +40,7 @@ async function run() {
     const toolsCollection = client.db("db-garden").collection("tools");
     const userCollection = client.db("db-garden").collection("users");
     const orderCollection = client.db("db-garden").collection("orders");
+    const ratingCollection = client.db("db-garden").collection("rating");
 
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
@@ -86,6 +87,12 @@ async function run() {
       }
     });
 
+    app.post("/reviews", async (req, res) => {
+      const data = req.body;
+      const result = await ratingCollection.insertOne(data);
+      res.send(result);
+    });
+
     /* ===== User Orders ==== */
     app.get("/orders/:email", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -104,10 +111,10 @@ async function run() {
     app.delete("/orders/:id", async (req, res) => {
       const { id } = req.params;
       const productId = req.headers.productid;
-     const toolQuery = {_id: ObjectId(productId)}
+      const toolQuery = { _id: ObjectId(productId) };
 
       const query = { _id: ObjectId(id) };
-      const deleteTools = await orderCollection.findOne(query)
+      const deleteTools = await orderCollection.findOne(query);
       const result = await orderCollection.deleteOne(query);
       if (result.acknowledged) {
         const tools = await toolsCollection.findOne(toolQuery);
