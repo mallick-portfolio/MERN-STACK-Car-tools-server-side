@@ -40,7 +40,7 @@ async function run() {
     const toolsCollection = client.db("db-garden").collection("tools");
     const userCollection = client.db("db-garden").collection("users");
     const orderCollection = client.db("db-garden").collection("orders");
-    const ratingCollection = client.db("db-garden").collection("rating");
+    const reviewCollection = client.db("db-garden").collection("rating");
 
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
@@ -89,8 +89,19 @@ async function run() {
 
     app.post("/reviews", async (req, res) => {
       const data = req.body;
-      const result = await ratingCollection.insertOne(data);
+      const result = await reviewCollection.insertOne(data);
       res.send(result);
+    });
+    app.get("/reviews/:email", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.params.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const review = await reviewCollection.find(query).toArray();
+        res.send(review);
+      } else {
+        res.status(403).send({ message: "Unauthorization access" });
+      }
     });
 
     /* ===== User Orders ==== */
