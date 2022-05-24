@@ -3,6 +3,7 @@ const app = express();
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
+var jwt = require('jsonwebtoken');
 
 const port = process.env.PORT || 5000;
 
@@ -22,6 +23,7 @@ async function run() {
     await client.connect();
 
     const toolsCollection = client.db("db-garden").collection("tools");
+    const userCollection = client.db("db-garden").collection("users");
 
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
@@ -44,6 +46,24 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await toolsCollection.findOne(query);
       res.send(result);
+    });
+
+    /* ========= User section ======== */
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "1d" }
+      );
+      res.send({ result, token });
     });
   } finally {
     // await client.close();
