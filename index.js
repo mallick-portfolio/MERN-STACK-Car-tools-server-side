@@ -28,6 +28,7 @@ const verifyJWT = (req, res, next) => {
     if (err) {
       return res.status(403).send({ message: "Forbidden access" });
     }
+    console.log("decoded", decoded);
     req.decoded = decoded;
     next();
   });
@@ -82,8 +83,20 @@ async function run() {
           filter,
           updateDoc
         );
-        console.log(updatedResutl);
         res.send(result);
+      }
+    });
+
+    /* ===== User Orders ==== */
+    app.get("/orders/:email", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.params.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const orders = await orderCollection.find(query).toArray();
+        res.send(orders);
+      }else{
+        res.status(403).send({message: 'Unauthorization access'})
       }
     });
 
