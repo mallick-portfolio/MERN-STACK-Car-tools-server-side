@@ -64,14 +64,28 @@ async function run() {
       res.send(result);
     });
 
-
     /* ======= User Order ===== */
-    app.post('/order', async (req, res) => {
+    app.post("/order", async (req, res) => {
       const data = req.body;
-      console.log(data)
-      const result = await orderCollection.insertOne(data)
-      res.send(result)
-    })
+
+      const result = await orderCollection.insertOne(data);
+      const query = { name: data.title };
+      const tools = await toolsCollection.findOne(query);
+      if (tools) {
+        const newQty = tools.avilQty - parseInt(data.quantity);
+        tools.avilQty = newQty;
+        const filter = { _id: ObjectId(tools._id) };
+        const updateDoc = {
+          $set: tools,
+        };
+        const updatedResutl = await toolsCollection.updateOne(
+          filter,
+          updateDoc
+        );
+        console.log(updatedResutl);
+        res.send(result);
+      }
+    });
 
     /* ========= User section ======== */
     app.put("/user/:email", async (req, res) => {
