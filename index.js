@@ -28,7 +28,6 @@ const verifyJWT = (req, res, next) => {
     if (err) {
       return res.status(403).send({ message: "Forbidden access" });
     }
-    console.log("decoded", decoded);
     req.decoded = decoded;
     next();
   });
@@ -95,8 +94,36 @@ async function run() {
         const query = { email: email };
         const orders = await orderCollection.find(query).toArray();
         res.send(orders);
-      }else{
-        res.status(403).send({message: 'Unauthorization access'})
+      } else {
+        res.status(403).send({ message: "Unauthorization access" });
+      }
+    });
+
+    /* Delete and Order */
+
+    app.delete("/orders/:id", async (req, res) => {
+      const { id } = req.params;
+      const productId = req.headers.productid;
+     const toolQuery = {_id: ObjectId(productId)}
+
+      const query = { _id: ObjectId(id) };
+      const deleteTools = await orderCollection.findOne(query)
+      const result = await orderCollection.deleteOne(query);
+      if (result.acknowledged) {
+        const tools = await toolsCollection.findOne(toolQuery);
+        if (tools) {
+          const newQty = tools.avilQty + parseInt(deleteTools.quantity);
+          tools.avilQty = newQty;
+          const filter = { _id: ObjectId(tools._id) };
+          const updateDoc = {
+            $set: tools,
+          };
+          const updatedResutl = await toolsCollection.updateOne(
+            filter,
+            updateDoc
+          );
+          res.send(result);
+        }
       }
     });
 
