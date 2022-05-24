@@ -3,7 +3,7 @@ const app = express();
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
-var jwt = require('jsonwebtoken');
+var jwt = require("jsonwebtoken");
 
 const port = process.env.PORT || 5000;
 
@@ -18,12 +18,28 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+const verifyJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "UnAuthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     await client.connect();
 
     const toolsCollection = client.db("db-garden").collection("tools");
     const userCollection = client.db("db-garden").collection("users");
+    const orderCollection = client.db("db-garden").collection("orders");
 
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
@@ -47,6 +63,15 @@ async function run() {
       const result = await toolsCollection.findOne(query);
       res.send(result);
     });
+
+
+    /* ======= User Order ===== */
+    app.post('/order', async (req, res) => {
+      const data = req.body;
+      console.log(data)
+      const result = await orderCollection.insertOne(data)
+      res.send(result)
+    })
 
     /* ========= User section ======== */
     app.put("/user/:email", async (req, res) => {
