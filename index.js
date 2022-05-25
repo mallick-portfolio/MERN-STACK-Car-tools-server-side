@@ -33,8 +33,6 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-
-
 async function run() {
   try {
     await client.connect();
@@ -46,15 +44,16 @@ async function run() {
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
-      console.log(requester)
-      const requesterAccount = await userCollection.findOne({ email: requester });
-      if (requesterAccount.role === 'admin') {
+      console.log(requester);
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
         next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
       }
-      else {
-        res.status(403).send({ message: 'forbidden' });
-      }
-    }
+    };
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
       const cursor = await toolsCollection
@@ -100,30 +99,6 @@ async function run() {
       }
     });
 
-    app.post("/reviews", async (req, res) => {
-      const data = req.body;
-      const result = await reviewCollection.insertOne(data);
-      res.send(result);
-    });
-    app.get("/reviews/:email", verifyJWT, async (req, res) => {
-      const decodedEmail = req.decoded.email;
-      const email = req.params.email;
-      if (email === decodedEmail) {
-        const query = { email: email };
-        const review = await reviewCollection.find(query).toArray();
-        res.send(review);
-      } else {
-        res.status(403).send({ message: "Unauthorization access" });
-      }
-    });
-
-    app.delete("/reviews/:id", async (req, res) => {
-      const { id } = req.params;
-      const query = { _id: ObjectId(id) };
-      const result = await reviewCollection.deleteOne(query);
-      res.send(result);
-    });
-
     /* ===== User Orders ==== */
     app.get("/orders/:email", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -166,7 +141,7 @@ async function run() {
     });
 
     // find all users
-    app.get("/users/:email", verifyJWT,verifyAdmin, async (req, res) => {
+    app.get("/users/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const decodedEmail = req.decoded.email;
       const email = req.params.email;
       if (email === decodedEmail) {
@@ -196,32 +171,62 @@ async function run() {
     });
 
     /* =========Admin Section======== */
-    app.get('/admin/:email', async(req, res) =>{
+    app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const user = await userCollection.findOne({email: email});
-      const isAdmin = user.role === 'admin';
-      res.send({admin: isAdmin})
-    })
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
 
     app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const requesterEmail = req.decoded.email;
-      const requesterAccount = await userCollection.findOne({email: requesterEmail})
+      const requesterAccount = await userCollection.findOne({
+        email: requesterEmail,
+      });
       const query = { email: email };
-      if (requesterAccount.role === 'admin') {
+      if (requesterAccount.role === "admin") {
         const updateDoc = {
           $set: {
             role: "admin",
           },
         };
         const result = await userCollection.updateOne(query, updateDoc);
-        console.log(result)
+        console.log(result);
         res.send(result);
       }
     });
 
+    /* =========Review Section ========= */
+    app.post("/reviews", async (req, res) => {
+      const data = req.body;
+      const result = await reviewCollection.insertOne(data);
+      res.send(result);
+    });
+    app.get("/reviews/:email", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.params.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const review = await reviewCollection.find(query).toArray();
+        res.send(review);
+      } else {
+        res.status(403).send({ message: "Unauthorization access" });
+      }
+    });
 
+    app.delete("/reviews/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.get("/reviews", async (req, res) => {
+      const reviews = await reviewCollection.find().toArray();
+      res.send(reviews);
+    });
 
+    /* ========Review Section End ======= */
 
     /* ====== End Admin Section====== */
   } finally {
