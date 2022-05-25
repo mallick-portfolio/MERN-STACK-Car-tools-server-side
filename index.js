@@ -37,7 +37,7 @@ async function run() {
   try {
     await client.connect();
 
-    const toolsCollection = client.db("db-garden").collection("tools");
+    const productCollection = client.db("db-garden").collection("tools");
     const userCollection = client.db("db-garden").collection("users");
     const orderCollection = client.db("db-garden").collection("orders");
     const reviewCollection = client.db("db-garden").collection("rating");
@@ -53,9 +53,10 @@ async function run() {
         res.status(403).send({ message: "forbidden" });
       }
     };
+    /* ========Start Product Section ======= */
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
-      const cursor = await toolsCollection
+      const cursor = await productCollection
         .find()
         .sort({ $natural: -1 })
         .limit(6)
@@ -64,7 +65,7 @@ async function run() {
     });
     // get all tools for display
     app.get("/tools", async (req, res) => {
-      const cursor = await toolsCollection.find().toArray();
+      const cursor = await productCollection.find().toArray();
       res.send(cursor);
     });
 
@@ -72,17 +73,24 @@ async function run() {
     app.get("/tools/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
-      const result = await toolsCollection.findOne(query);
+      const result = await productCollection.findOne(query);
       res.send(result);
     });
 
+    app.get("/admin/products", async (req, res) => {
+      const products = await productCollection.find().toArray()
+      console.log(products);
+      res.send(products);
+    });
+
+    /* ==========End product Sectioin ========== */
     /* ======= User Order ===== */
     app.post("/order", async (req, res) => {
       const data = req.body;
 
       const result = await orderCollection.insertOne(data);
       const query = { name: data.title };
-      const tools = await toolsCollection.findOne(query);
+      const tools = await productCollection.findOne(query);
       if (tools) {
         const newQty = tools.avilQty - parseInt(data.quantity);
         tools.avilQty = newQty;
@@ -90,7 +98,7 @@ async function run() {
         const updateDoc = {
           $set: tools,
         };
-        const updatedResutl = await toolsCollection.updateOne(
+        const updatedResutl = await productCollection.updateOne(
           filter,
           updateDoc
         );
@@ -129,7 +137,7 @@ async function run() {
       const deleteTools = await orderCollection.findOne(query);
       const result = await orderCollection.deleteOne(query);
       if (result.acknowledged) {
-        const tools = await toolsCollection.findOne(toolQuery);
+        const tools = await productCollection.findOne(toolQuery);
         if (tools) {
           const newQty = tools.avilQty + parseInt(deleteTools.quantity);
           tools.avilQty = newQty;
@@ -137,7 +145,7 @@ async function run() {
           const updateDoc = {
             $set: tools,
           };
-          const updatedResutl = await toolsCollection.updateOne(
+          const updatedResutl = await productCollection.updateOne(
             filter,
             updateDoc
           );
@@ -146,9 +154,8 @@ async function run() {
       }
     });
 
-
     // Update order Status
-    app.put('/admin/orders/:id', async(req, res) => {
+    app.put("/admin/orders/:id", async (req, res) => {
       const id = req.params.id;
       const status = req.body;
       const filter = { _id: ObjectId(id) };
