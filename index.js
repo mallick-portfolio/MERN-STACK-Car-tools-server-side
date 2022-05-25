@@ -181,6 +181,27 @@ async function run() {
       );
       res.send({ result, token });
     });
+
+    /* =========Admin Section======== */
+
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const requesterEmail = req.decoded.email;
+      const requesterAccount = await userCollection.findOne({email: requesterEmail})
+      const query = { email: email };
+      if (requesterAccount.role === 'admin') {
+        const updateDoc = {
+          $set: {
+            role: "admin",
+          },
+        };
+        const result = await userCollection.updateOne(query, updateDoc);
+        console.log(result)
+        res.send(result);
+      }
+    });
+
+    /* ====== End Admin Section====== */
   } finally {
     // await client.close();
   }
