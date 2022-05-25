@@ -33,6 +33,8 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
+
+
 async function run() {
   try {
     await client.connect();
@@ -42,6 +44,17 @@ async function run() {
     const orderCollection = client.db("db-garden").collection("orders");
     const reviewCollection = client.db("db-garden").collection("rating");
 
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded.email;
+      console.log(requester)
+      const requesterAccount = await userCollection.findOne({ email: requester });
+      if (requesterAccount.role === 'admin') {
+        next();
+      }
+      else {
+        res.status(403).send({ message: 'forbidden' });
+      }
+    }
     // get tools for display into home page
     app.get("/home-tools", async (req, res) => {
       const cursor = await toolsCollection
@@ -153,7 +166,7 @@ async function run() {
     });
 
     // find all users
-    app.get("/users/:email", verifyJWT, async (req, res) => {
+    app.get("/users/:email", verifyJWT,verifyAdmin, async (req, res) => {
       const decodedEmail = req.decoded.email;
       const email = req.params.email;
       if (email === decodedEmail) {
