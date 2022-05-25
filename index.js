@@ -44,7 +44,6 @@ async function run() {
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
-      console.log(requester);
       const requesterAccount = await userCollection.findOne({
         email: requester,
       });
@@ -99,6 +98,13 @@ async function run() {
       }
     });
 
+    /* =======Order Section Start ======== */
+
+    // get all user order
+    app.get("/orders", async (req, res) => {
+      const orders = await orderCollection.find().toArray();
+      res.send(orders);
+    });
     /* ===== User Orders ==== */
     app.get("/orders/:email", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -139,6 +145,21 @@ async function run() {
         }
       }
     });
+
+
+    // Update order Status
+    app.put('/admin/orders/:id', async(req, res) => {
+      const id = req.params.id;
+      const status = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: status,
+      };
+      const result = await orderCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    /* =====Order section End */
 
     // find all users
     app.get("/users/:email", verifyJWT, verifyAdmin, async (req, res) => {
@@ -192,7 +213,6 @@ async function run() {
           },
         };
         const result = await userCollection.updateOne(query, updateDoc);
-        console.log(result);
         res.send(result);
       }
     });
@@ -222,7 +242,10 @@ async function run() {
       res.send(result);
     });
     app.get("/reviews", async (req, res) => {
-      const reviews = await reviewCollection.find().toArray();
+      const reviews = await reviewCollection
+        .find()
+        .sort({ $natural: -1 })
+        .toArray();
       res.send(reviews);
     });
 
