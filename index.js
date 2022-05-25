@@ -104,6 +104,13 @@ async function run() {
       }
     });
 
+    app.delete("/reviews/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
+
     /* ===== User Orders ==== */
     app.get("/orders/:email", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -142,6 +149,18 @@ async function run() {
           );
           res.send(result);
         }
+      }
+    });
+
+    // find all users
+    app.get("/users/:email", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
+      const email = req.params.email;
+      if (email === decodedEmail) {
+        const users = await userCollection.find().toArray();
+        res.send(users);
+      } else {
+        res.status(403).send({ message: "Unauthorization access" });
       }
     });
 
