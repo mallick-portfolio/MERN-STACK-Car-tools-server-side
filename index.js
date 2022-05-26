@@ -302,6 +302,21 @@ async function run() {
       res.send(reviews);
     });
 
+    /* =====================Profile Section Start==================== */
+
+    app.get("/profile/user/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email}
+      const requester = req.decoded.email;
+      if(email === requester){
+        const result = await userCollection.findOne(query)
+        console.log(result)
+        res.send(result)
+      }
+    });
+
+    /* =====================Profile Section End==================== */
+
     /* ========Review Section End ======= */
   } finally {
     // await client.close();
