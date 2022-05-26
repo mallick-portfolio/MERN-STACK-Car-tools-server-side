@@ -303,16 +303,37 @@ async function run() {
     });
 
     /* =====================Profile Section Start==================== */
+    // Get user Profile
+    app.get("/profile/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.findOne(query);
+      console.log(result);
+      res.send(result);
+    });
 
     app.get("/profile/user/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const query = {email: email}
+      const query = { email: email };
       const requester = req.decoded.email;
-      if(email === requester){
-        const result = await userCollection.findOne(query)
-        console.log(result)
-        res.send(result)
+      if (email === requester) {
+        const result = await userCollection.findOne(query);
+        res.send(result);
       }
+    });
+
+    // Update User Profile
+
+    app.put("/profile/user/:id", async (req, res) =>{
+      const id = req.params.id;
+      const data = req.body
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: data,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      console.log(result)
+      res.send(result);
     });
 
     /* =====================Profile Section End==================== */
