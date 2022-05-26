@@ -88,7 +88,6 @@ async function run() {
         .find()
         .sort({ $natural: -1 })
         .toArray();
-      console.log(products);
       res.send(products);
     });
 
@@ -99,6 +98,28 @@ async function run() {
       res.send(result);
     });
 
+    // get single product
+
+    app.get("/admin/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
+
+    // Update Product
+    
+    
+    app.put('/admin/product/:id', async(req, res) =>{
+      const id = req.params.id;
+      const status = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: status,
+      };
+      const result = await productCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
     /* ==========End product Sectioin ========== */
     /* ======= User Order ===== */
     app.post("/order", async (req, res) => {
@@ -108,7 +129,7 @@ async function run() {
       const query = { name: data.title };
       const tools = await productCollection.findOne(query);
       if (tools) {
-        const newQty = tools.avilQty - parseInt(data.quantity);
+        const newQty = parseInt(tools.avilQty) - parseInt(data.quantity);
         tools.avilQty = newQty;
         const filter = { _id: ObjectId(tools._id) };
         const updateDoc = {
@@ -155,7 +176,7 @@ async function run() {
       if (result.acknowledged) {
         const tools = await productCollection.findOne(toolQuery);
         if (tools) {
-          const newQty = tools.avilQty + parseInt(deleteTools.quantity);
+          const newQty = parseInt(tools.avilQty) + parseInt(deleteTools.quantity);
           tools.avilQty = newQty;
           const filter = { _id: ObjectId(tools._id) };
           const updateDoc = {
@@ -273,8 +294,6 @@ async function run() {
     });
 
     /* ========Review Section End ======= */
-
-    /* ====== End Admin Section====== */
   } finally {
     // await client.close();
   }
