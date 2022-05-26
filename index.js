@@ -108,9 +108,7 @@ async function run() {
     });
 
     // Update Product
-    
-    
-    app.put('/admin/product/:id', async(req, res) =>{
+    app.put("/admin/product/:id", async (req, res) => {
       const id = req.params.id;
       const status = req.body;
       const filter = { _id: ObjectId(id) };
@@ -120,6 +118,16 @@ async function run() {
       const result = await productCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
+    // Delete Product
+    app.delete("/admin/product/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const query = { _id: ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      res.send(result);
+    });
+
     /* ==========End product Sectioin ========== */
     /* ======= User Order ===== */
     app.post("/order", async (req, res) => {
@@ -176,7 +184,8 @@ async function run() {
       if (result.acknowledged) {
         const tools = await productCollection.findOne(toolQuery);
         if (tools) {
-          const newQty = parseInt(tools.avilQty) + parseInt(deleteTools.quantity);
+          const newQty =
+            parseInt(tools.avilQty) + parseInt(deleteTools.quantity);
           tools.avilQty = newQty;
           const filter = { _id: ObjectId(tools._id) };
           const updateDoc = {
