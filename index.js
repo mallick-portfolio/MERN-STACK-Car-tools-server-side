@@ -186,7 +186,8 @@ async function run() {
       const filter = { _id: ObjectId(id) };
       const updateDoc = {
         $set: {
-          transactionId: data.transactionId
+          transactionId: data.transactionId,
+          status: 'Processing'
         },
       };
       const updatedResult = await orderCollection.updateOne(
