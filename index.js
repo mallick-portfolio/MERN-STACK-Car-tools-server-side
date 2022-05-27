@@ -150,7 +150,7 @@ async function run() {
           filter,
           updateDoc
         );
-        res.send(result);
+        res.send(updatedResult);
       }
     });
 
@@ -221,7 +221,34 @@ async function run() {
             filter,
             updateDoc
           );
-          res.send(result);
+          res.send(updatedResult);
+        }
+      }
+    });
+    app.delete("/admin/orders/:id", async (req, res) => {
+      const { id } = req.params;
+      const productId = req.headers.productid;
+      console.log(productId);
+      const toolQuery = { _id: ObjectId(productId) };
+
+      const query = { _id: ObjectId(id) };
+      const deleteTools = await orderCollection.findOne(query);
+      const result = await orderCollection.deleteOne(query);
+      if (result.acknowledged) {
+        const tools = await productCollection.findOne(toolQuery);
+        if (tools) {
+          const newQty =
+            parseInt(tools.avilQty) + parseInt(deleteTools.quantity);
+          tools.avilQty = newQty;
+          const filter = { _id: ObjectId(tools._id) };
+          const updateDoc = {
+            $set: tools,
+          };
+          const updatedResult = await productCollection.updateOne(
+            filter,
+            updateDoc
+          );
+          res.send(updatedResult);
         }
       }
     });
@@ -253,12 +280,11 @@ async function run() {
     });
 
     // Delete a user
-    
-    
-    app.delete('/users/:id', async(req, res)=> {
+
+    app.delete("/users/:id", async (req, res) => {
       const { id } = req.params;
-      const query = {_id: ObjectId(id)}
-      const remainingUser  = await userCollection.deleteOne(query) 
+      const query = { _id: ObjectId(id) };
+      const remainingUser = await userCollection.deleteOne(query);
       res.send(remainingUser);
     });
 
@@ -371,11 +397,11 @@ async function run() {
     });
 
     // Profile Common Route
-    
-    app.put('/profile/users/:id', function(req, res) {
+
+    app.put("/profile/users/:id", function (req, res) {
       const id = req.params.id;
       const data = req.body;
-      console.log(id, data)
+      console.log(id, data);
       res.send(data);
     });
     /* =====================Profile Section End==================== */
@@ -391,7 +417,6 @@ async function run() {
       });
       res.send({ clientSecret: paymentIntent.client_secret });
     });
-
 
     /* ========Review Section End ======= */
   } finally {
