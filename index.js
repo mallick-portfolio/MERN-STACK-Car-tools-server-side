@@ -49,6 +49,7 @@ async function run() {
     const userCollection = client.db("db-garden").collection("users");
     const orderCollection = client.db("db-garden").collection("orders");
     const reviewCollection = client.db("db-garden").collection("rating");
+    const paymentCollection = client.db("db-garden").collection("payments");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -187,13 +188,12 @@ async function run() {
       const updateDoc = {
         $set: {
           transactionId: data.transactionId,
-          status: 'Processing'
+          status: "Processing",
         },
       };
-      const updatedResult = await orderCollection.updateOne(
-        filter,
-        updateDoc
-      );
+      const updatedResult = await orderCollection.updateOne(filter, updateDoc);
+      const newPayment = await paymentCollection.insertOne(data);
+
       res.send(updatedResult);
     });
 
@@ -252,6 +252,16 @@ async function run() {
       }
     });
 
+    // Delete a user
+    
+    
+    app.delete('/users/:id', async(req, res)=> {
+      const { id } = req.params;
+      const query = {_id: ObjectId(id)}
+      const remainingUser  = await userCollection.deleteOne(query) 
+      res.send(remainingUser);
+    });
+
     /* ========= User section ======== */
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -274,7 +284,7 @@ async function run() {
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
-      const isAdmin = user.role === "admin";
+      const isAdmin = user?.role === "admin";
       res.send({ admin: isAdmin });
     });
 
@@ -360,6 +370,16 @@ async function run() {
       res.send(result);
     });
 
+    // Profile Common Route
+    
+    app.put('/profile/users/:id', function(req, res) {
+      const id = req.params.id;
+      const data = req.body;
+      console.log(id, data)
+      res.send(data);
+    });
+    /* =====================Profile Section End==================== */
+
     /* Payment integration */
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const service = req.body;
@@ -372,7 +392,6 @@ async function run() {
       res.send({ clientSecret: paymentIntent.client_secret });
     });
 
-    /* =====================Profile Section End==================== */
 
     /* ========Review Section End ======= */
   } finally {
