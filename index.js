@@ -267,6 +267,7 @@ async function run() {
 
     /* =====Order section End */
 
+
     // find all users
     app.get("/users/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -425,5 +426,5 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get("/", (req, res) => res.send("Hello World!"));
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.get("/", (req, res) => res.send("Car is running"));
+app.listen(port, () => console.log(`Takus app listening on port ${port}!`));
