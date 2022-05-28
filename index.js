@@ -201,7 +201,7 @@ async function run() {
 
     app.delete("/orders/:id", async (req, res) => {
       const { id } = req.params;
-      const productId = req.headers.productid;
+      const productId = req.body.productid;
       const toolQuery = { _id: ObjectId(productId) };
 
       const query = { _id: ObjectId(id) };
@@ -227,10 +227,8 @@ async function run() {
     });
     app.delete("/admin/orders/:id", async (req, res) => {
       const { id } = req.params;
-      const productId = req.headers.productid;
-      console.log(productId);
+      const productId = req.body.productid;
       const toolQuery = { _id: ObjectId(productId) };
-
       const query = { _id: ObjectId(id) };
       const deleteTools = await orderCollection.findOne(query);
       const result = await orderCollection.deleteOne(query);
@@ -266,7 +264,6 @@ async function run() {
     });
 
     /* =====Order section End */
-
 
     // find all users
     app.get("/users/:email", verifyJWT, verifyAdmin, async (req, res) => {
